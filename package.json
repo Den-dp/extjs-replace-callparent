@@ -7,7 +7,8 @@
     "/lib"
   ],
   "scripts": {
-    "build": "babel -d ./lib ./src",
+    "build": "babel ./src --source-maps --out-dir ./lib",
+    "watch": "yarn build --watch",
     "test": "jest",
     "preversion": "yarn build && yarn test"
   },
