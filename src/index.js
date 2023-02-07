@@ -5,14 +5,18 @@ export default function ({ types: t }) {
 
     const findParentDefinition = initDefinitionFactory(t);
 
-    function isThisOrMeExpression(node) {
-        return t.isThisExpression(node) || t.isIdentifier(node, { name: 'me' });
+    function isThisCallParentCallExpression(path) {
+        let node = path.node.callee;
+        return isCallParentCallee(node) &&
+            (t.isThisExpression(node.object) || isIdentifierResolvesToThisExpression(node.object, path.scope));
+    }
+
+    function isIdentifierResolvesToThisExpression(node, scope) {
+        return t.isThisExpression(scope.getBinding(node.name).path.node.init);
     }
 
     function isCallParentCallee(node) {
-        return t.isMemberExpression(node) &&
-            isThisOrMeExpression(node.object) &&
-            t.isIdentifier(node.property, { name: 'callParent' });
+        return t.isMemberExpression(node) && t.isIdentifier(node.property, { name: 'callParent' });
     }
 
     function isClassMethod(path) {
@@ -44,7 +48,7 @@ export default function ({ types: t }) {
     return {
         visitor: {
             CallExpression(path, state) {
-                if (!isCallParentCallee(path.node.callee)) {
+                if (!isThisCallParentCallExpression(path)) {
                     return;
                 }
 
